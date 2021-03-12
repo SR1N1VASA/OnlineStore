@@ -3,6 +3,7 @@ package com.onlinestore.controller;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -22,11 +23,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.onlinestore.domain.Book;
 import com.onlinestore.domain.User;
 import com.onlinestore.domain.security.PasswordResetToken;
 import com.onlinestore.domain.security.Role;
 import com.onlinestore.domain.security.UserRole;
 import com.onlinestore.service.UserService;
+import com.onlinestore.service.BookService;
 import com.onlinestore.service.impl.UserSecurityService;
 import com.onlinestore.utility.MailConstructor;
 import com.onlinestore.utility.SecurityUtility;
@@ -46,6 +49,9 @@ public class HomeController {
 	
 	@Autowired
 	private UserSecurityService userSecurityService;
+	
+	@Autowired
+	private BookService bookService;
 
 	@RequestMapping("/")
 	public String index() {
@@ -174,5 +180,13 @@ public class HomeController {
 
 		model.addAttribute("classActiveEdit", true);
 		return "myProfile";
+	}
+	
+	@RequestMapping("/bookshelf")
+	public String bookshelf(Model model) {
+		List<Book> bookList = bookService.findAll();
+		model.addAttribute("bookList", bookList);
+		
+		return "bookshelf";
 	}
 }
