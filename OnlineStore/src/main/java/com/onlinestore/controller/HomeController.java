@@ -2,6 +2,7 @@ package com.onlinestore.controller;
 
 import java.security.Principal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -26,8 +27,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.onlinestore.utility.USConstants;
 import com.onlinestore.domain.Book;
 import com.onlinestore.domain.User;
+import com.onlinestore.domain.UserShipping;
 import com.onlinestore.domain.security.PasswordResetToken;
 import com.onlinestore.domain.security.Role;
 import com.onlinestore.domain.security.UserRole;
@@ -213,5 +216,27 @@ public class HomeController {
 		model.addAttribute("qty", 1);
 		
 		return "bookDetail";
+	}
+	
+	@RequestMapping("/myProfile")
+	public String myProfile(Model model, Principal principal) {
+		User user = userService.findByUsername(principal.getName());
+		model.addAttribute("user", user);
+		/*model.addAttribute("userPaymentList", user.getUserPaymentList());
+		model.addAttribute("userShippingList", user.getUserShippingList());
+		model.addAttribute("orderList", user.getOrderList());*/
+		
+		UserShipping userShipping = new UserShipping();
+		model.addAttribute("userShipping", userShipping);
+		
+		model.addAttribute("listOfCreditCards", true);
+		model.addAttribute("listOfShippingAddresses", true);
+		
+		List<String> stateList = USConstants.listOfUSStatesCode;
+		Collections.sort(stateList);
+		model.addAttribute("stateList", stateList);
+		model.addAttribute("classActiveEdit", true);
+		
+		return "myProfile";
 	}
 }
