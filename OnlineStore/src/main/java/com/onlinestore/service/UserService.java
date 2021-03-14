@@ -5,6 +5,7 @@ import java.util.Set;
 import com.onlinestore.domain.User;
 import com.onlinestore.domain.UserBilling;
 import com.onlinestore.domain.UserPayment;
+import com.onlinestore.domain.UserShipping;
 import com.onlinestore.domain.security.PasswordResetToken;
 import com.onlinestore.domain.security.UserRole;
 
@@ -24,5 +25,9 @@ public interface UserService {
 	
 	void updateUserBilling(UserBilling userBilling, UserPayment userPayment, User user);
 	
+	void updateUserShipping(UserShipping userShipping, User user);
+	
 	void setUserDefaultPayment(Long userPaymentId, User user);
+	
+	void setUserDefaultShipping(Long userShippingId, User user);
 }
