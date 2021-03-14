@@ -1,0 +1,23 @@
+package com.onlinestore.service.impl;
+
+import org.springframework.stereotype.Service;
+
+import com.onlinestore.domain.Payment;
+import com.onlinestore.domain.UserPayment;
+import com.onlinestore.service.PaymentService;
+
+@Service
+public class PaymentServiceImpl implements PaymentService{
+	
+	public Payment setByUserPayment(UserPayment userPayment, Payment payment) {
+		payment.setType(userPayment.getType());
+		payment.setHolderName(userPayment.getHolderName());
+		payment.setCardNumber(userPayment.getCardNumber());
+		payment.setExpiryMonth(userPayment.getExpiryMonth());
+		payment.setExpiryYear(userPayment.getExpiryYear());
+		payment.setCvc(userPayment.getCvc());
+		
+		return payment;
+	}
+
+}
