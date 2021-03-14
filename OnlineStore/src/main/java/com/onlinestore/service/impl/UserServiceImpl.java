@@ -1,11 +1,14 @@
 package com.onlinestore.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.onlinestore.domain.ShoppingCart;
 import com.onlinestore.domain.User;
 import com.onlinestore.domain.UserBilling;
 import com.onlinestore.domain.UserPayment;
@@ -56,12 +59,13 @@ public class UserServiceImpl implements UserService{
 	public User findByUsername(String username) {
 		return userRepository.findByUsername(username);
 	}
-	
+	@Override
 	public User findByEmail (String email) {
 		return userRepository.findByEmail(email);
 	}
-	
-	public User createUser(User user, Set<UserRole> userRoles) throws Exception{
+	@Override
+	@Transactional
+	public User createUser(User user, Set<UserRole> userRoles){
 		User localUser = userRepository.findByUsername(user.getUsername());
 		
 		if(localUser != null) {
@@ -72,6 +76,14 @@ public class UserServiceImpl implements UserService{
 			}
 			
 			user.getUserRoles().addAll(userRoles);
+			
+			ShoppingCart shoppingCart = new ShoppingCart();
+			shoppingCart.setUser(user);
+			user.setShoppingCart(shoppingCart);
+			
+			user.setUserShippingList(new ArrayList<UserShipping>());
+			user.setUserPaymentList(new ArrayList<UserPayment>());
+			
 			
 			localUser = userRepository.save(user);
 		}
