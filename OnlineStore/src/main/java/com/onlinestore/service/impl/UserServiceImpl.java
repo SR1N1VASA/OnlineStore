@@ -1,5 +1,6 @@
 package com.onlinestore.service.impl;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import com.onlinestore.domain.security.PasswordResetToken;
 import com.onlinestore.domain.security.UserRole;
 import com.onlinestore.repository.PasswordResetTokenRepository;
 import com.onlinestore.repository.RoleRepository;
+import com.onlinestore.repository.UserPaymentRepository;
 import com.onlinestore.repository.UserRepository;
 import com.onlinestore.service.UserService;
 import org.slf4j.Logger;
@@ -30,6 +32,9 @@ public class UserServiceImpl implements UserService{
 	
 	@Autowired
 	private PasswordResetTokenRepository passwordResetTokenRepository;
+	
+	@Autowired
+	private UserPaymentRepository userPaymentRepository;
 	
 	@Override
 	public PasswordResetToken getPasswordResetToken(final String token) {
@@ -82,5 +87,20 @@ public class UserServiceImpl implements UserService{
 		userBilling.setUserPayment(userPayment);
 		user.getUserPaymentList().add(userPayment);
 		save(user);
+	}
+	
+	@Override
+	public void setUserDefaultPayment(Long userPaymentId, User user) {
+		List<UserPayment> userPaymentList = (List<UserPayment>) userPaymentRepository.findAll();
+		
+		for (UserPayment userPayment : userPaymentList) {
+			if(userPayment.getId() == userPaymentId) {
+				userPayment.setDefaultPayment(true);
+				userPaymentRepository.save(userPayment);
+			} else {
+				userPayment.setDefaultPayment(false);
+				userPaymentRepository.save(userPayment);
+			}
+		}
 	}
 }
