@@ -1,17 +1,23 @@
 package com.onlinestore.controller;
 
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.onlinestore.domain.BillingAddress;
 import com.onlinestore.domain.CartItem;
+import com.onlinestore.domain.Order;
 import com.onlinestore.domain.Payment;
 import com.onlinestore.domain.ShippingAddress;
 import com.onlinestore.domain.ShoppingCart;
@@ -21,11 +27,14 @@ import com.onlinestore.domain.UserPayment;
 import com.onlinestore.domain.UserShipping;
 import com.onlinestore.service.BillingAddressService;
 import com.onlinestore.service.CartItemService;
+import com.onlinestore.service.OrderService;
 import com.onlinestore.service.PaymentService;
 import com.onlinestore.service.ShippingAddressService;
+import com.onlinestore.service.ShoppingCartService;
 import com.onlinestore.service.UserPaymentService;
 import com.onlinestore.service.UserService;
 import com.onlinestore.service.UserShippingService;
+import com.onlinestore.utility.MailConstructor;
 import com.onlinestore.utility.USConstants;
 
 @Controller
@@ -55,6 +64,19 @@ public class CheckoutController {
 	
 	@Autowired
 	private PaymentService paymentService;
+	
+	@Autowired
+	private ShoppingCartService shoppingCartService;
+	
+
+	@Autowired
+	private OrderService orderService;
+	
+	@Autowired
+	private MailConstructor mailConstructor;
+	
+	@Autowired
+	private JavaMailSender mailSender;
 	
 	@RequestMapping("/checkout")
 	public String checkout(
@@ -133,6 +155,58 @@ public class CheckoutController {
 		
 		return "checkout";
 		
+	}
+	
+	@RequestMapping(value = "/checkout", method = RequestMethod.POST)
+	public String checkoutPost(@ModelAttribute("shippingAddress") ShippingAddress shippingAddress,
+			@ModelAttribute("billingAddress") BillingAddress billingAddress, @ModelAttribute("payment") Payment payment,
+			@ModelAttribute("billingSameAsShipping") String billingSameAsShipping,
+			@ModelAttribute("shippingMethod") String shippingMethod, Principal principal, Model model) {
+		ShoppingCart shoppingCart = userService.findByUsername(principal.getName()).getShoppingCart();
+
+		List<CartItem> cartItemList = cartItemService.findByShoppingCart(shoppingCart);
+		model.addAttribute("cartItemList", cartItemList);
+
+		if (billingSameAsShipping.equals("true")) {
+			billingAddress.setBillingAddressName(shippingAddress.getShippingAddressName());
+			billingAddress.setBillingAddressStreet1(shippingAddress.getShippingAddressStreet1());
+			billingAddress.setBillingAddressStreet2(shippingAddress.getShippingAddressStreet2());
+			billingAddress.setBillingAddressCity(shippingAddress.getShippingAddressCity());
+			billingAddress.setBillingAddressState(shippingAddress.getShippingAddressState());
+			billingAddress.setBillingAddressCountry(shippingAddress.getShippingAddressCountry());
+			billingAddress.setBillingAddressZipcode(shippingAddress.getShippingAddressZipcode());
+		}
+
+		if (shippingAddress.getShippingAddressStreet1().isEmpty() || shippingAddress.getShippingAddressCity().isEmpty()
+				|| shippingAddress.getShippingAddressState().isEmpty()
+				|| shippingAddress.getShippingAddressName().isEmpty()
+				|| shippingAddress.getShippingAddressZipcode().isEmpty() || payment.getCardNumber().isEmpty()
+				|| payment.getCvc() == 0 || billingAddress.getBillingAddressStreet1().isEmpty()
+				|| billingAddress.getBillingAddressCity().isEmpty() || billingAddress.getBillingAddressState().isEmpty()
+				|| billingAddress.getBillingAddressName().isEmpty()
+				|| billingAddress.getBillingAddressZipcode().isEmpty())
+			return "redirect:/checkout?id=" + shoppingCart.getId() + "&missingRequiredField=true";
+		
+		User user = userService.findByUsername(principal.getName());
+		
+		Order order = orderService.createOrder(shoppingCart, shippingAddress, billingAddress, payment, shippingMethod, user);
+		
+		mailSender.send(mailConstructor.constructOrderConfirmationEmail(user, order, Locale.ENGLISH));
+		
+		shoppingCartService.clearShoppingCart(shoppingCart);
+		
+		LocalDate today = LocalDate.now();
+		LocalDate estimatedDeliveryDate;
+		
+		if (shippingMethod.equals("groundShipping")) {
+			estimatedDeliveryDate = today.plusDays(5);
+		} else {
+			estimatedDeliveryDate = today.plusDays(3);
+		}
+		
+		model.addAttribute("estimatedDeliveryDate", estimatedDeliveryDate);
+		
+		return "orderSubmittedPage";
 	}
 
 	@RequestMapping("/setShippingAddress")
