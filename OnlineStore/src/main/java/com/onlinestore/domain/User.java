@@ -49,6 +49,9 @@ public class User implements UserDetails{
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
 	private List<UserPayment> userPaymentList;
 	
+	@OneToMany(mappedBy = "user")
+	private List<Order> orderList;
+	
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JsonIgnore
 	private Set<UserRole> userRoles = new HashSet<>();
@@ -149,6 +152,13 @@ public class User implements UserDetails{
 	@Override
 	public boolean isEnabled() {
 		return enabled;
+	}
+	
+	public List<Order> getOrderList() {
+		return orderList;
+	}
+	public void setOrderList(List<Order> orderList) {
+		this.orderList = orderList;
 	}
 	
 	
