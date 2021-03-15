@@ -68,7 +68,6 @@ public class UserServiceImpl implements UserService{
 		return userRepository.findByEmail(email);
 	}
 	@Override
-	@Transactional
 	public User createUser(User user, Set<UserRole> userRoles){
 		User localUser = userRepository.findByUsername(user.getUsername());
 		

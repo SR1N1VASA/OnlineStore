@@ -72,6 +72,7 @@ public class BillingAddress {
 		BillingAddressState = billingAddressState;
 	}
 
+
 	public String getBillingAddressCountry() {
 		return BillingAddressCountry;
 	}
